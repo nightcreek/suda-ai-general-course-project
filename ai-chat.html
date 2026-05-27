@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AI 对话与文件问答｜智能学习伙伴原型</title><link rel="stylesheet" href="assets/css/style.css"/></head>
+<body><div class="container"><header class="site-header"><h1>AI 对话与文件问答</h1><p>上传资料，结合学生画像进行问答</p></header><nav id="main-nav" class="top-nav"></nav>
+<main><section>
+<div class="section-head"><div><h2 class="section-title">上下文配置</h2><p class="section-subtitle">API Key 只保存在当前页面运行内存中。</p></div><span class="step-badge">STEP 03</span></div>
+<div class="grid-3">
+  <div class="card action" data-action-group="ai-config" data-opens="key-panel" onclick="togglePanel('ai-config','key-panel')"><h3>输入 API Key</h3><p id="api-key-status">API Key：未设置</p></div>
+  <div class="card action" data-action-group="ai-config" data-opens="file-panel" onclick="togglePanel('ai-config','file-panel')"><h3>上传文本文件</h3><p id="file-status">未上传文件</p></div>
+  <div class="card action" data-action-group="ai-config" data-opens="context-panel" onclick="togglePanel('ai-config','context-panel'); setText('context-preview', buildProfileText(loadProfile()) + '\n\n文件：' + (uploadedFileName || '无'))"><h3>查看当前上下文</h3><p>学生画像、预测与文件。</p></div>
+</div>
+<div id="key-panel" data-panel-group="ai-config" class="accordion-panel"><button class="primary" onclick="openModal('apiKeyModal')">设置 API Key</button><p class="muted">本页面不会内置或保存你的 API Key。</p></div>
+<div id="file-panel" data-panel-group="ai-config" class="accordion-panel"><div class="file-zone"><input type="file" id="file-input" accept=".txt,.md,.csv,.json"/><div class="toolbar"><button onclick="clearUploadedFile()">清除文件</button></div><div id="file-preview" class="file-preview hidden"></div></div><p class="muted">当前支持 txt / md / csv / json。PDF 或 Word 建议先转成文本。</p></div>
+<div id="context-panel" data-panel-group="ai-config" class="accordion-panel"><div id="context-preview" class="result-box"></div></div>
+</section>
+<section><div class="section-head"><div><h2 class="section-title">学习问答</h2><p class="section-subtitle">把问题、文件和学生画像一起发送给模型。</p></div></div><div class="chat-container" id="chat-container"><div class="message assistant">你好，我是智能学习伙伴。请先设置 API Key；如有作业文本、CSV 或 Markdown 文件，可以在上方上传。之后直接输入问题。</div></div><div class="chat-input"><input type="text" id="chat-input" placeholder="例如：根据我上传的作业文件，帮我讲解第 2 题"/><button id="send-chat" class="primary">发送</button></div></section>
+</main><footer class="footer">AI 对话与文件问答页面</footer></div>
+<div id="apiKeyModal" class="modal"><div class="modal-content"><div class="modal-head"><h3>设置 API Key</h3><span class="close" onclick="closeModal('apiKeyModal')">&times;</span></div><input type="password" id="api-key-input" placeholder="sk-..." autocomplete="off"/><div style="height:12px"></div><input type="text" id="api-model-input" value="gpt-4o-mini"/><div class="toolbar"><button onclick="closeModal('apiKeyModal')">取消</button><button class="primary" onclick="saveApiKeyFromModal()">保存</button></div></div></div>
+<script src="assets/js/common.js"></script><script src="assets/js/prediction.js"></script><script src="assets/js/ai.js"></script><script>renderMainNav('ai-chat.html'); bindChat();</script></body></html>

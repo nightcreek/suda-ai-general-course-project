@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学生画像与预测｜智能学习伙伴原型</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="site-header"><h1>学生画像与预测</h1><p>学习状态输入 · 通过概率 · 综合成绩预测</p></header>
+    <nav id="main-nav" class="top-nav"></nav>
+    <main>
+      <section>
+        <div class="section-head"><div><h2 class="section-title">学生画像与预测仪表盘</h2><p class="section-subtitle">调整滑动条，实时更新预测结果。</p></div><span class="step-badge">STEP 01</span></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>学生状态输入</h3>
+            <div class="slider-row"><label>每日学习时长</label><input type="range" id="study-hours" min="0" max="12" step="0.1" value="2" oninput="syncProfilePage()"/><span class="value-badge"><span id="sh-val">2.0</span> 小时</span></div>
+            <div class="slider-row"><label>课程出勤率</label><input type="range" id="attendance" min="0" max="100" step="1" value="80" oninput="syncProfilePage()"/><span class="value-badge"><span id="att-val">80</span>%</span></div>
+            <div class="slider-row"><label>每日睡眠时长</label><input type="range" id="sleep-hours" min="0" max="12" step="0.1" value="7" oninput="syncProfilePage()"/><span class="value-badge"><span id="slp-val">7.0</span> 小时</span></div>
+            <div class="slider-row"><label>前次考试成绩</label><input type="range" id="previous-scores" min="0" max="100" step="1" value="70" oninput="syncProfilePage()"/><span class="value-badge"><span id="prev-val">70</span> 分</span></div>
+            <div class="notice">当前画像会保存到浏览器 localStorage，供学习计划和 AI 文件问答页面读取；API Key 不会保存。</div>
+          </div>
+          <div class="card">
+            <h3>实时预测结果</h3>
+            <div class="grid-4">
+              <div class="card soft kpi"><span class="kpi-label">学时</span><span class="kpi-value" id="kpi-study">2.0h</span></div>
+              <div class="card soft kpi"><span class="kpi-label">出勤</span><span class="kpi-value" id="kpi-att">80%</span></div>
+              <div class="card soft kpi"><span class="kpi-label">睡眠</span><span class="kpi-value" id="kpi-sleep">7.0h</span></div>
+              <div class="card soft kpi"><span class="kpi-label">前次</span><span class="kpi-value" id="kpi-prev">70</span></div>
+            </div>
+            <div class="grid-2" style="margin-top:16px;">
+              <div class="card soft kpi"><span class="kpi-label">课程通过概率</span><span class="kpi-value" id="pass-prob">--</span><p id="pass-label" class="muted"></p></div>
+              <div class="card soft kpi"><span class="kpi-label">综合成绩预测</span><span class="kpi-value" id="grade-pred">--</span><p id="grade-label" class="muted"></p></div>
+            </div>
+            <div class="result-box" id="profile-explain"></div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <div class="section-head"><div><h2 class="section-title">模型说明</h2><p class="section-subtitle">预测模型在前端直接运行。</p></div></div>
+        <div class="grid-2">
+          <div class="card"><h3>逻辑回归模型</h3><p>用于预测课程通过概率。HTML 中嵌入模型参数，通过 sigmoid 函数得到概率。</p></div>
+          <div class="card"><h3>综合成绩预测模型</h3><p>采用可解释的多特征成绩估计，避免未标准化 MLP 权重造成反直觉结果。</p></div>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">学生画像与预测页面</footer>
+  </div>
+  <script src="assets/js/common.js"></script><script src="assets/js/prediction.js"></script>
+  <script>
+    renderMainNav('student-profile.html');
+    function fillInputs(p){ document.getElementById('study-hours').value=p.studyHours; document.getElementById('attendance').value=p.attendance; document.getElementById('sleep-hours').value=p.sleepHours; document.getElementById('previous-scores').value=p.previousScore; }
+    function syncProfilePage(){
+      const p=readProfileFromInputs(); saveProfile(p);
+      setText('sh-val',p.studyHours.toFixed(1)); setText('att-val',p.attendance.toFixed(0)); setText('slp-val',p.sleepHours.toFixed(1)); setText('prev-val',p.previousScore.toFixed(0));
+      setText('kpi-study',p.studyHours.toFixed(1)+'h'); setText('kpi-att',p.attendance.toFixed(0)+'%'); setText('kpi-sleep',p.sleepHours.toFixed(1)+'h'); setText('kpi-prev',p.previousScore.toFixed(0));
+      const pass=predictPassFromProfile(p); const grade=predictGradeFromProfile(p); const advice=generateAdvice(p);
+      setText('pass-prob',(pass*100).toFixed(1)+'%'); setText('pass-label',pass>=.5?'状态：通过':'状态：存在风险');
+      setText('grade-pred',grade.toFixed(1)+' 分'); setText('grade-label',gradeLevel(grade));
+      setText('profile-explain',`主要判断：${advice.risks.join('；')}。\n建议：${advice.action}`);
+    }
+    fillInputs(loadProfile()); syncProfilePage();
+  </script>
+</body></html>

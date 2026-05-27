@@ -1,0 +1,8 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>模型说明与项目文档｜智能学习伙伴原型</title><link rel="stylesheet" href="assets/css/style.css"/></head>
+<body><div class="container"><header class="site-header"><h1>模型说明与项目文档</h1><p>训练思路 · HTML 嵌入 · 课程演示限制</p></header><nav id="main-nav" class="top-nav"></nav>
+<main>
+<section><div class="section-head"><div><h2 class="section-title">项目定位</h2><p class="section-subtitle">苏大人工智能通识选修课作业。</p></div><span class="step-badge">DOC</span></div><div class="notice">本项目是纯前端课程演示原型，不包含自建后端服务器。API Key 由用户自行输入，仅用于当前页面运行时调用。</div></section>
+<section><h2 class="section-title">机器学习模型嵌入方式</h2><div class="grid-2"><div class="card"><h3>为什么不能直接嵌入 .pkcls</h3><p>Orange 导出的 .pkcls 属于 Python/Orange 生态的序列化模型对象，浏览器不能直接执行。要在 HTML 中运行，需要提取参数或重新用 JavaScript 写成推理函数。</p></div><div class="card"><h3>当前做法</h3><p>逻辑回归模型被转换成 JavaScript 公式：线性组合 + sigmoid。综合成绩预测使用可解释的多特征估计模型，便于课堂展示和结果解释。</p></div></div></section>
+<section><h2 class="section-title">输入特征</h2><div class="grid-4"><div class="card"><h3>学习时长</h3><p>每日学习投入。</p></div><div class="card"><h3>出勤率</h3><p>课程参与情况。</p></div><div class="card"><h3>睡眠时长</h3><p>作息状态，不是越高越好。</p></div><div class="card"><h3>前次成绩</h3><p>历史表现基线。</p></div></div></section>
+<section><h2 class="section-title">纯前端演示限制</h2><div class="result-box">1. API Key 不应写死在 HTML 中。\n2. 文件由浏览器本地读取，再作为上下文发给用户指定的大模型 API。\n3. 文本文件最稳定，PDF / Word 建议先转文本。\n4. GeoGebra 依赖外部 CDN，现场演示前应提前测试网络。\n5. 正式系统应使用后端保护 API Key 和用户文件。</div></section>
+</main><footer class="footer">模型说明与项目文档页面</footer></div><script src="assets/js/common.js"></script><script>renderMainNav('model-description.html');</script></body></html>

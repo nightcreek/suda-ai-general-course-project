@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>学习计划与复盘｜智能学习伙伴原型</title><link rel="stylesheet" href="assets/css/style.css"/></head>
+<body><div class="container">
+<header class="site-header"><h1>学习计划与复盘</h1><p>把预测结果转化为学习行动</p></header><nav id="main-nav" class="top-nav"></nav>
+<main>
+<section>
+  <div class="section-head"><div><h2 class="section-title">当前学习建议摘要</h2><p class="section-subtitle">读取学生画像页面保存的数据。</p></div><span class="step-badge">STEP 02</span></div>
+  <div class="grid-3">
+    <div class="card soft"><h3>今日学习动作</h3><p id="today-action">--</p></div>
+    <div class="card soft"><h3>主要风险点</h3><p id="risk-summary">--</p></div>
+    <div class="card soft"><h3>下一步训练</h3><p id="next-training">--</p></div>
+  </div>
+</section>
+<section>
+  <div class="section-head"><div><h2 class="section-title">学习计划</h2><p class="section-subtitle">生成本周安排。</p></div></div>
+  <div class="grid-2">
+    <div class="card action" data-action-group="plan" data-opens="weekly-plan" onclick="togglePanel('plan','weekly-plan'); renderWeeklyPlan();"><h3>生成学习计划</h3><p>根据当前画像给出一周安排。</p></div>
+    <div class="card"><h3>当前画像</h3><p id="profile-short">--</p></div>
+  </div>
+  <div id="weekly-plan" data-panel-group="plan" class="accordion-panel"><h3>本周学习计划</h3><div id="weekly-plan-content" class="result-box"></div></div>
+</section>
+<section>
+  <div class="section-head"><div><h2 class="section-title">学习复盘</h2><p class="section-subtitle">识别薄弱点，生成训练任务。</p></div></div>
+  <div class="grid-3">
+    <div class="card action" data-action-group="review" data-opens="weakness-panel" onclick="togglePanel('review','weakness-panel'); renderWeakness();"><h3>薄弱点分析</h3><p>识别风险来源与复习重点。</p></div>
+    <div class="card action" data-action-group="review" data-opens="practice-panel" onclick="togglePanel('review','practice-panel'); renderPractice();"><h3>相似练习生成</h3><p>输出基础、巩固、提高题。</p></div>
+    <div class="card action" data-action-group="review" data-opens="model-panel" onclick="togglePanel('review','model-panel');"><h3>模型说明</h3><p>解释预测输入与用途。</p></div>
+  </div>
+  <div id="weakness-panel" data-panel-group="review" class="accordion-panel"><h3>薄弱点分析结果</h3><div id="weakness-content" class="result-box"></div></div>
+  <div id="practice-panel" data-panel-group="review" class="accordion-panel"><h3>相似练习</h3><div id="practice-content" class="result-box"></div></div>
+  <div id="model-panel" data-panel-group="review" class="accordion-panel"><h3>模型说明</h3><div class="result-box">逻辑回归用于预测课程通过概率；综合成绩预测用于展示学习状态与后续成绩之间的关系。输入特征包括学习时长、出勤率、睡眠时长、前次成绩。本页面不调用后端服务器。</div></div>
+</section>
+</main><footer class="footer">学习计划与复盘页面</footer></div>
+<script src="assets/js/common.js"></script><script src="assets/js/prediction.js"></script>
+<script>
+renderMainNav('learning-plan.html');
+function init(){ const p=loadProfile(); const advice=generateAdvice(p); setText('profile-short', buildProfileText(p).replaceAll('\n',' ｜ ')); setText('risk-summary', advice.risks.join('；')); setText('today-action', advice.grade>=80?'完成一组提高题，并复盘一道错题。': advice.grade>=65?'完成一组基础题，补齐一个薄弱概念。':'先复习定义与例题，完成基础题训练。'); setText('next-training', advice.grade>=80?'综合题、证明题、图像分析。': advice.grade>=65?'定义、例题模板、基础计算。':'基础定义、课堂例题、错题复盘。'); }
+function renderWeeklyPlan(){ const p=loadProfile(); const advice=generateAdvice(p); setText('weekly-plan-content', `周一：复习一个核心概念，完成 3 道基础题。\n周二：整理错题，标注错误类型。\n周三：完成一组同类型巩固题。\n周四：结合 GeoGebra 观察一个函数或几何对象。\n周五：做一次小测并记录耗时。\n周末：复盘本周薄弱点。\n\n重点：${advice.risks.join('；')}。\n建议：${advice.action}`); }
+function renderWeakness(){ const p=loadProfile(); const advice=generateAdvice(p); setText('weakness-content', `识别到的风险点：\n- ${advice.risks.join('\n- ')}\n\n处理顺序：先保证出勤与基础题，再处理提高题。若已上传作业文件，可在“AI 对话与文件问答”页面结合文件继续分析。`); }
+function renderPractice(){ const p=loadProfile(); const advice=generateAdvice(p); setText('practice-content', `基础题：写出函数连续、可导、极限存在的定义，并各举一例。\n巩固题：求 f(x)=x^2 sin(x) 的导数并讨论零点。\n提高题：结合图像解释导数符号与函数单调性的关系。\nGeoGebra 建议：在数形结合页面输入“分析 f(x)=x^2 sin(x) 的图像和导数关系”。`); }
+init();
+</script></body></html>
