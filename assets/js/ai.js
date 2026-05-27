@@ -1,5 +1,20 @@
 let userApiKey = '';
 let apiModel = 'gpt-4o-mini';
+function initSharedApiForChat() {
+  const session = loadSharedApiSession();
+  userApiKey = session.key;
+  apiModel = session.model;
+  const modelInput = document.getElementById('api-model-input');
+  if (modelInput) modelInput.value = apiModel;
+  setText('api-key-status', userApiKey ? `API Key：已设置｜${apiModel}` : 'API Key：未设置');
+}
+function clearApiKeySessionFromChat() {
+  clearSharedApiSession();
+  userApiKey = '';
+  apiModel = 'gpt-4o-mini';
+  setText('api-key-status', 'API Key：未设置');
+  appendMessage('chat-container', 'API Key 会话已清除。', 'assistant');
+}
 let uploadedFileText = '';
 let uploadedFileName = '';
 function saveApiKeyFromModal() {
@@ -8,6 +23,7 @@ function saveApiKeyFromModal() {
   if (!key) { alert('请先输入 API Key。'); return; }
   userApiKey = key;
   apiModel = model || 'gpt-4o-mini';
+  saveSharedApiSession(userApiKey, apiModel);
   document.getElementById('api-key-input').value = '';
   setText('api-key-status', `API Key：已设置｜${apiModel}`);
   closeModal('apiKeyModal');
@@ -66,6 +82,7 @@ async function askLLM(question, containerId='chat-container') {
   }
 }
 function bindChat() {
+  initSharedApiForChat();
   bindFileInput();
   const send = document.getElementById('send-chat');
   const input = document.getElementById('chat-input');

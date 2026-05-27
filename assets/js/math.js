@@ -1,5 +1,20 @@
 let mathApiKey = '';
 let mathModel = 'gpt-4o-mini';
+function initSharedApiForMath() {
+  const session = loadSharedApiSession();
+  mathApiKey = session.key;
+  mathModel = session.model;
+  const modelInput = document.getElementById('math-api-model-input');
+  if (modelInput) modelInput.value = mathModel;
+  setText('math-api-status', mathApiKey ? `API Key：已设置｜${mathModel}` : 'API Key：未设置');
+}
+function clearApiKeySessionFromMath() {
+  clearSharedApiSession();
+  mathApiKey = '';
+  mathModel = 'gpt-4o-mini';
+  setText('math-api-status', 'API Key：未设置');
+  setText('math-status', '当前状态：API Key 会话已清除。');
+}
 let graphingApi = null;
 let graphingInjected = false;
 function saveMathApiKey() {
@@ -8,6 +23,7 @@ function saveMathApiKey() {
   if (!key) { alert('请先输入 API Key。'); return; }
   mathApiKey = key;
   mathModel = model || 'gpt-4o-mini';
+  saveSharedApiSession(mathApiKey, mathModel);
   document.getElementById('math-api-key-input').value = '';
   setText('math-api-status', `API Key：已设置｜${mathModel}`);
   closeModal('mathApiModal');

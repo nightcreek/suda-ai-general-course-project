@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AI 对话与文件问答｜智能学习伙伴原型</title><link rel="stylesheet" href="assets/css/style.css"/></head>
-<body><div class="container"><header class="site-header"><h1>AI 对话与文件问答</h1><p>上传资料，结合学生画像进行问答</p></header><nav id="main-nav" class="top-nav"></nav>
+<body><div class="container"><header class="site-header"><h1>AI 对话与文件问答</h1><p>上传资料，结合学生画像进行问答</p></header><nav id="main-nav" class="top-nav"></nav><div class="notice">API Key 仅保存在当前浏览器会话中，用于跨页面临时共享；关闭标签页后会自动清空。</div>
 <main><section>
 <div class="section-head"><div><h2 class="section-title">上下文配置</h2><p class="section-subtitle">API Key 只保存在当前页面运行内存中。</p></div><span class="step-badge">STEP 03</span></div>
 <div class="grid-3">
@@ -7,7 +7,7 @@
   <div class="card action" data-action-group="ai-config" data-opens="file-panel" onclick="togglePanel('ai-config','file-panel')"><h3>上传文本文件</h3><p id="file-status">未上传文件</p></div>
   <div class="card action" data-action-group="ai-config" data-opens="context-panel" onclick="togglePanel('ai-config','context-panel'); setText('context-preview', buildProfileText(loadProfile()) + '\n\n文件：' + (uploadedFileName || '无'))"><h3>查看当前上下文</h3><p>学生画像、预测与文件。</p></div>
 </div>
-<div id="key-panel" data-panel-group="ai-config" class="accordion-panel"><button class="primary" onclick="openModal('apiKeyModal')">设置 API Key</button><p class="muted">本页面不会内置或保存你的 API Key。</p></div>
+<div id="key-panel" data-panel-group="ai-config" class="accordion-panel"><div class="toolbar"><button class="primary" onclick="openModal('apiKeyModal')">设置 API Key</button><button onclick="clearApiKeySessionFromChat()">清除本次会话 Key</button></div><p class="muted">API Key 使用 sessionStorage 临时共享，仅限当前浏览器会话；关闭标签页后清空。</p></div>
 <div id="file-panel" data-panel-group="ai-config" class="accordion-panel"><div class="file-zone"><input type="file" id="file-input" accept=".txt,.md,.csv,.json"/><div class="toolbar"><button onclick="clearUploadedFile()">清除文件</button></div><div id="file-preview" class="file-preview hidden"></div></div><p class="muted">当前支持 txt / md / csv / json。PDF 或 Word 建议先转成文本。</p></div>
 <div id="context-panel" data-panel-group="ai-config" class="accordion-panel"><div id="context-preview" class="result-box"></div></div>
 </section>
