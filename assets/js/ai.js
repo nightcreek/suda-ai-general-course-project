@@ -1,31 +1,38 @@
 let userApiKey = '';
-let apiModel = 'gpt-4o-mini';
+let apiModel = DEFAULT_API_MODEL;
 function initSharedApiForChat() {
   const session = loadSharedApiSession();
   userApiKey = session.key;
   apiModel = session.model;
   const modelInput = document.getElementById('api-model-input');
   if (modelInput) modelInput.value = apiModel;
-  setText('api-key-status', userApiKey ? `API Key：已设置｜${apiModel}` : 'API Key：未设置');
+  setText('api-key-status', userApiKey ? `API Key：${maskApiKeyForDisplay(userApiKey)}｜模型：${apiModel}` : 'API Key：未设置');
+  const homeLink = document.getElementById('ai-home-api-link');
+  if (homeLink) homeLink.classList.toggle('hidden', !!userApiKey);
 }
 function clearApiKeySessionFromChat() {
   clearSharedApiSession();
   userApiKey = '';
-  apiModel = 'gpt-4o-mini';
+  apiModel = DEFAULT_API_MODEL;
   setText('api-key-status', 'API Key：未设置');
+  const homeLink = document.getElementById('ai-home-api-link');
+  if (homeLink) homeLink.classList.remove('hidden');
   appendMessage('chat-container', 'API Key 会话已清除。', 'assistant');
 }
 let uploadedFileText = '';
 let uploadedFileName = '';
 function saveApiKeyFromModal() {
-  const key = document.getElementById('api-key-input').value.trim();
-  const model = document.getElementById('api-model-input').value.trim();
+  const keyInput = document.getElementById('api-key-input');
+  const modelInput = document.getElementById('api-model-input');
+  if (!keyInput || !modelInput) { alert('请回首页设置 API Key。'); return; }
+  const key = keyInput.value.trim();
+  const model = modelInput.value.trim();
   if (!key) { alert('请先输入 API Key。'); return; }
   userApiKey = key;
-  apiModel = model || 'gpt-4o-mini';
+  apiModel = model || DEFAULT_API_MODEL;
   saveSharedApiSession(userApiKey, apiModel);
-  document.getElementById('api-key-input').value = '';
-  setText('api-key-status', `API Key：已设置｜${apiModel}`);
+  keyInput.value = '';
+  setText('api-key-status', `API Key：${maskApiKeyForDisplay(userApiKey)}｜模型：${apiModel}`);
   closeModal('apiKeyModal');
 }
 function bindFileInput() {
@@ -59,7 +66,7 @@ function buildContextForAI(question) {
   return `你是面向大一学生的智能学习伙伴。请结合学生画像、预测结果和用户上传文件回答问题。\n\n【学生画像与预测】\n${buildProfileText(p)}\n\n【上传文件】\n文件名：${uploadedFileName || '无'}\n内容：\n${uploadedFileText || '未上传文件'}\n\n【用户问题】\n${question}\n\n请用中文回答，先给结论，再给具体步骤或学习建议。`;
 }
 async function askLLM(question, containerId='chat-container') {
-  if (!userApiKey) { appendMessage(containerId, '请先输入 API Key。', 'assistant'); return; }
+  if (!userApiKey) { appendMessage(containerId, '请先回首页设置 API Key。', 'assistant'); return; }
   const thinking = document.createElement('div');
   thinking.className = 'message assistant';
   thinking.textContent = '正在调用大语言模型...';

@@ -1,43 +1,199 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>学习计划与复盘｜智能学习伙伴原型</title><link rel="stylesheet" href="assets/css/style.css"/></head>
-<body><div class="container">
-<header class="site-header"><h1>学习计划与复盘</h1><p>把预测结果转化为学习行动</p></header><nav id="main-nav" class="top-nav"></nav>
-<main>
-<section>
-  <div class="section-head"><div><h2 class="section-title">当前学习建议摘要</h2><p class="section-subtitle">读取学生画像页面保存的数据。</p></div><span class="step-badge">STEP 02</span></div>
-  <div class="grid-3">
-    <div class="card soft"><h3>今日学习动作</h3><p id="today-action">--</p></div>
-    <div class="card soft"><h3>主要风险点</h3><p id="risk-summary">--</p></div>
-    <div class="card soft"><h3>下一步训练</h3><p id="next-training">--</p></div>
-  </div>
-</section>
-<section>
-  <div class="section-head"><div><h2 class="section-title">学习计划</h2><p class="section-subtitle">生成本周安排。</p></div></div>
-  <div class="grid-2">
-    <div class="card action" data-action-group="plan" data-opens="weekly-plan" onclick="togglePanel('plan','weekly-plan'); renderWeeklyPlan();"><h3>生成学习计划</h3><p>根据当前画像给出一周安排。</p></div>
-    <div class="card"><h3>当前画像</h3><p id="profile-short">--</p></div>
-  </div>
-  <div id="weekly-plan" data-panel-group="plan" class="accordion-panel"><h3>本周学习计划</h3><div id="weekly-plan-content" class="result-box"></div></div>
-</section>
-<section>
-  <div class="section-head"><div><h2 class="section-title">学习复盘</h2><p class="section-subtitle">识别薄弱点，生成训练任务。</p></div></div>
-  <div class="grid-3">
-    <div class="card action" data-action-group="review" data-opens="weakness-panel" onclick="togglePanel('review','weakness-panel'); renderWeakness();"><h3>薄弱点分析</h3><p>识别风险来源与复习重点。</p></div>
-    <div class="card action" data-action-group="review" data-opens="practice-panel" onclick="togglePanel('review','practice-panel'); renderPractice();"><h3>相似练习生成</h3><p>输出基础、巩固、提高题。</p></div>
-    <div class="card action" data-action-group="review" data-opens="model-panel" onclick="togglePanel('review','model-panel');"><h3>模型说明</h3><p>解释预测输入与用途。</p></div>
-  </div>
-  <div id="weakness-panel" data-panel-group="review" class="accordion-panel"><h3>薄弱点分析结果</h3><div id="weakness-content" class="result-box"></div></div>
-  <div id="practice-panel" data-panel-group="review" class="accordion-panel"><h3>相似练习</h3><div id="practice-content" class="result-box"></div></div>
-  <div id="model-panel" data-panel-group="review" class="accordion-panel"><h3>模型说明</h3><div class="result-box">逻辑回归用于预测课程通过概率；综合成绩预测用于展示学习状态与后续成绩之间的关系。输入特征包括学习时长、出勤率、睡眠时长、前次成绩。本页面不调用后端服务器。</div></div>
-</section>
-</main><footer class="footer">学习计划与复盘页面</footer></div>
-<script src="assets/js/common.js"></script><script src="assets/js/prediction.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学习计划与复盘｜智能学习伙伴原型</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div class="container">
+  <header class="site-header">
+    <h1>学习计划与复盘</h1>
+    <p>由大语言模型根据学生画像生成个性化计划、复盘和练习</p>
+  </header>
+  <nav id="main-nav" class="top-nav"></nav>
+  <div class="notice">请先在首页设置 API Key；本页会自动检测当前浏览器会话中的 API Key 与模型名称。</div>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">AI 会话状态</h2>
+          <p class="section-subtitle">本页自动读取首页保存的 API Key 与模型名称。</p>
+        </div>
+        <span class="step-badge">SETUP</span>
+      </div>
+      <div class="grid-3">
+        <div class="card soft">
+          <h3>当前 API 会话</h3>
+          <p id="plan-api-status">API Key：未设置</p>
+        </div>
+        <div class="card soft">
+          <h3>当前学生画像</h3>
+          <p id="profile-short">--</p>
+        </div>
+        <div class="card soft">
+          <h3>生成方式</h3>
+          <p>由首页设置的 API Key 和模型实时生成，不使用固定模板。</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="primary" onclick="generateAISummary()">AI 生成学习建议摘要</button>
+        <a id="plan-home-api-link" class="button" href="index.html">回首页设置 API Key</a>
+        <a class="button" href="student-profile.html">返回调整学生画像</a>
+      </div>
+      <p id="plan-status" class="muted">当前状态：等待 AI 分析。</p>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">当前学习建议摘要</h2>
+          <p class="section-subtitle">点击上方按钮后由 AI 生成。</p>
+        </div>
+        <span class="step-badge">STEP 02</span>
+      </div>
+      <div class="grid-3">
+        <div class="card soft"><h3>今日学习动作</h3><p id="today-action">等待 AI 生成。</p></div>
+        <div class="card soft"><h3>主要风险点</h3><p id="risk-summary">等待 AI 生成。</p></div>
+        <div class="card soft"><h3>下一步训练</h3><p id="next-training">等待 AI 生成。</p></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">学习计划</h2>
+          <p class="section-subtitle">生成本周安排。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card action" data-action-group="plan" data-opens="weekly-plan" onclick="togglePanel('plan','weekly-plan'); generateAIPlan();">
+          <h3>AI 生成学习计划</h3>
+          <p>根据画像、预测结果生成一周学习安排。</p>
+        </div>
+        <div class="card soft">
+          <h3>使用说明</h3>
+          <p>建议先在“学生画像”页面调整滑动条，再返回这里生成计划。</p>
+        </div>
+      </div>
+      <div id="weekly-plan" data-panel-group="plan" class="accordion-panel">
+        <h3>本周学习计划</h3>
+        <div id="weekly-plan-content" class="result-box">等待 AI 生成。</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">学习复盘</h2>
+          <p class="section-subtitle">由 AI 分析薄弱点和训练任务。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card action" data-action-group="review" data-opens="weakness-panel" onclick="togglePanel('review','weakness-panel'); generateAIWeakness();">
+          <h3>AI 薄弱点分析</h3>
+          <p>识别风险来源与复习重点。</p>
+        </div>
+        <div class="card action" data-action-group="review" data-opens="practice-panel" onclick="togglePanel('review','practice-panel'); generateAIPractice();">
+          <h3>AI 相似练习生成</h3>
+          <p>输出基础、巩固、提高题。</p>
+        </div>
+        <div class="card action" data-action-group="review" data-opens="model-panel" onclick="togglePanel('review','model-panel');">
+          <h3>模型说明</h3>
+          <p>解释预测输入与用途。</p>
+        </div>
+      </div>
+      <div id="weakness-panel" data-panel-group="review" class="accordion-panel">
+        <h3>薄弱点分析结果</h3>
+        <div id="weakness-content" class="result-box">等待 AI 生成。</div>
+      </div>
+      <div id="practice-panel" data-panel-group="review" class="accordion-panel">
+        <h3>相似练习</h3>
+        <div id="practice-content" class="result-box">等待 AI 生成。</div>
+      </div>
+      <div id="model-panel" data-panel-group="review" class="accordion-panel">
+        <h3>模型说明</h3>
+        <div class="result-box">逻辑回归用于预测课程通过概率；综合成绩预测用于展示学习状态与后续成绩之间的关系。学习计划与复盘模块不会使用固定模板直接给答案，而是把学生画像和预测结果发送给用户选择的大语言模型，由模型生成个性化计划、薄弱点分析和练习建议。</div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">学习计划与复盘页面</footer>
+</div>
+
+<script src="assets/js/common.js"></script>
+<script src="assets/js/prediction.js"></script>
 <script>
 renderMainNav('learning-plan.html');
-function init(){ const p=loadProfile(); const advice=generateAdvice(p); setText('profile-short', buildProfileText(p).replaceAll('\n',' ｜ ')); setText('risk-summary', advice.risks.join('；')); setText('today-action', advice.grade>=80?'完成一组提高题，并复盘一道错题。': advice.grade>=65?'完成一组基础题，补齐一个薄弱概念。':'先复习定义与例题，完成基础题训练。'); setText('next-training', advice.grade>=80?'综合题、证明题、图像分析。': advice.grade>=65?'定义、例题模板、基础计算。':'基础定义、课堂例题、错题复盘。'); }
-function renderWeeklyPlan(){ const p=loadProfile(); const advice=generateAdvice(p); setText('weekly-plan-content', `周一：复习一个核心概念，完成 3 道基础题。\n周二：整理错题，标注错误类型。\n周三：完成一组同类型巩固题。\n周四：结合 GeoGebra 观察一个函数或几何对象。\n周五：做一次小测并记录耗时。\n周末：复盘本周薄弱点。\n\n重点：${advice.risks.join('；')}。\n建议：${advice.action}`); }
-function renderWeakness(){ const p=loadProfile(); const advice=generateAdvice(p); setText('weakness-content', `识别到的风险点：\n- ${advice.risks.join('\n- ')}\n\n处理顺序：先保证出勤与基础题，再处理提高题。若已上传作业文件，可在“AI 对话与文件问答”页面结合文件继续分析。`); }
-function renderPractice(){ const p=loadProfile(); const advice=generateAdvice(p); setText('practice-content', `基础题：写出函数连续、可导、极限存在的定义，并各举一例。\n巩固题：求 f(x)=x^2 sin(x) 的导数并讨论零点。\n提高题：结合图像解释导数符号与函数单调性的关系。\nGeoGebra 建议：在数形结合页面输入“分析 f(x)=x^2 sin(x) 的图像和导数关系”。`); }
+function init(){
+  const p = loadProfile();
+  setText('profile-short', buildProfileText(p).replaceAll('\n',' ｜ '));
+  refreshApiStatus('plan-api-status');
+  const session = loadSharedApiSession();
+  const link = document.getElementById('plan-home-api-link');
+  if (session.key) {
+    if (link) link.classList.add('hidden');
+    setText('plan-status', `当前状态：已检测到 API Key，模型：${session.model}。可直接生成 AI 学习建议。`);
+  } else {
+    if (link) link.classList.remove('hidden');
+    setText('plan-status','当前状态：未检测到 API Key，请先回首页设置。');
+  }
+}
+function learningSystemPrompt(){
+  return '你是面向大学新生的智能学习伙伴。请基于学生画像和预测结果生成具体、可执行、不过度夸张的学习建议。要求中文回答，结构清晰，不要使用 Markdown 表格。';
+}
+function profileBlock(){ return buildProfileText(loadProfile()); }
+async function runLearningLLM(targetId, task, statusText){
+  setText('plan-status', statusText || '当前状态：正在调用大语言模型...');
+  setText(targetId, '正在生成，请稍候...');
+  try {
+    const reply = await callSharedLLM({
+      system: learningSystemPrompt(),
+      user: `【学生画像与预测】\n${profileBlock()}\n\n【任务】\n${task}`,
+      temperature: 0.35
+    });
+    setText(targetId, reply);
+    setText('plan-status', '当前状态：AI 分析完成。');
+  } catch (err) {
+    setText(targetId, `生成失败：${err.message}`);
+    setText('plan-status', '当前状态：需要检查 API Key、模型名称或网络。');
+  }
+}
+async function generateAISummary(){
+  setText('today-action','正在生成...');
+  setText('risk-summary','正在生成...');
+  setText('next-training','正在生成...');
+  try {
+    const reply = await callSharedLLM({
+      system: learningSystemPrompt(),
+      user: `【学生画像与预测】\n${profileBlock()}\n\n请输出三段，每段一行，格式必须严格为：\n今日学习动作：...\n主要风险点：...\n下一步训练：...`,
+      temperature: 0.25
+    });
+    const getLine = (label) => {
+      const line = reply.split('\n').find(l => l.trim().startsWith(label));
+      return line ? line.replace(label,'').replace(/^[:：]/,'').trim() : reply;
+    };
+    setText('today-action', getLine('今日学习动作'));
+    setText('risk-summary', getLine('主要风险点'));
+    setText('next-training', getLine('下一步训练'));
+    setText('plan-status','当前状态：AI 摘要已生成。');
+  } catch (err) {
+    setText('today-action', `生成失败：${err.message}`);
+    setText('risk-summary', '请检查 API Key、模型名称或网络。');
+    setText('next-training', '修复后可重新生成。');
+  }
+}
+function generateAIPlan(){
+  runLearningLLM('weekly-plan-content', '请生成一份 7 天学习计划。每一天包括：学习目标、具体任务、预计用时、复盘方式。计划要结合预测分数和风险点。', '当前状态：正在生成学习计划...');
+}
+function generateAIWeakness(){
+  runLearningLLM('weakness-content', '请分析该学生目前最可能的 3 个薄弱点，分别说明原因、证据和干预建议。', '当前状态：正在分析薄弱点...');
+}
+function generateAIPractice(){
+  runLearningLLM('practice-content', '请生成一组数学学习练习：基础题 2 道、巩固题 2 道、提高题 1 道。每题给出提示，但不要直接给完整答案。', '当前状态：正在生成相似练习...');
+}
 init();
-</script></body></html>
+</script>
+</body>
+</html>

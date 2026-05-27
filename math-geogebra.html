@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AI 数形结合讲题｜智能学习伙伴原型</title><script src="https://cdn.geogebra.org/apps/deployggb.js"></script><link rel="stylesheet" href="assets/css/style.css"/></head>
-<body><div class="container"><header class="site-header"><h1>AI 数形结合讲题</h1><p>数学讲解 · GeoGebra 绘图联动</p></header><nav id="main-nav" class="top-nav"></nav><div class="notice">API Key 仅保存在当前浏览器会话中，用于跨页面临时共享；关闭标签页后会自动清空。</div>
+<body><div class="container"><header class="site-header"><h1>AI 数形结合讲题</h1><p>数学讲解 · GeoGebra 绘图联动 · 自定义模型</p></header><nav id="main-nav" class="top-nav"></nav><div class="notice">请先在首页设置 API Key；本页会自动检测当前浏览器会话中的 API Key 与模型名称。</div>
 <main><section>
 <div class="section-head"><div><h2 class="section-title">题目输入</h2><p class="section-subtitle">AI 生成讲解；必要时自动绘图。</p></div><span class="step-badge">STEP 04</span></div>
-<div class="toolbar"><button class="primary" onclick="openModal('mathApiModal')">设置 API Key</button><button onclick="clearApiKeySessionFromMath()">清除本次会话 Key</button><span id="math-api-status" class="value-badge">API Key：未设置</span><a class="button" href="https://www.geogebra.org/graphing" target="_blank" rel="noopener">独立图形计算器</a></div>
+<div class="toolbar"><span id="math-api-status" class="value-badge">API Key：未设置</span><a id="math-home-api-link" class="button" href="index.html">回首页设置 API Key</a><a class="button" href="https://www.geogebra.org/graphing" target="_blank" rel="noopener">独立图形计算器</a></div>
 <div class="toolbar"><button onclick="fillExample('分析函数 f(x)=sin(x)+x^2/10 的图像，并标出与 x 轴的交点。')">函数图像示例</button><button onclick="fillExample('解释导数的几何意义，并用 f(x)=x^3-3x 画图说明。')">导数几何意义</button><button onclick="fillExample('求解 x^2-2=0，并说明解在数轴上的位置。')">方程示例</button></div>
 <textarea id="math-prompt" style="margin-top:16px;" placeholder="例如：分析函数 f(x)=sin(x)+x^2/10 的图像，并标出与 x 轴的交点。"></textarea>
 <div class="toolbar"><button class="primary" style="width:100%;" onclick="executeMathQuestion()">生成讲解与图形</button></div>
@@ -10,5 +10,4 @@
 </section>
 <section><div class="section-head"><div><h2 class="section-title">讲题结果</h2><p class="section-subtitle">讲解、命令与图像分区显示。</p></div></div><div class="grid-2"><div class="card"><h3>数学讲解</h3><div id="math-output" class="result-box">尚未生成讲解。</div></div><div class="card"><h3>GeoGebra 指令</h3><div id="math-commands" class="command-badges"></div><p class="muted">若模型返回绘图命令，下方图形区会自动展开。</p></div></div><div id="ggb-pane" class="ggb-pane"></div></section>
 </main><footer class="footer">AI 数形结合讲题页面</footer></div>
-<div id="mathApiModal" class="modal"><div class="modal-content"><div class="modal-head"><h3>设置 API Key</h3><span class="close" onclick="closeModal('mathApiModal')">&times;</span></div><input type="password" id="math-api-key-input" placeholder="sk-..." autocomplete="off"/><div style="height:12px"></div><input type="text" id="math-api-model-input" value="gpt-4o-mini"/><div class="toolbar"><button onclick="closeModal('mathApiModal')">取消</button><button class="primary" onclick="saveMathApiKey()">保存</button></div></div></div>
 <script src="assets/js/common.js"></script><script src="assets/js/math.js"></script><script>renderMainNav('math-geogebra.html'); initSharedApiForMath();</script></body></html>

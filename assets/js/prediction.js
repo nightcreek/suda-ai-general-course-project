@@ -54,5 +54,3 @@ function generateAdvice(p) {
   const action = grade >= 80 ? "保持节奏，增加提高题与综合题训练。" : grade >= 65 ? "优先补齐薄弱概念，并提高每日有效学习时间。" : "先完成基础定义、例题和错题复盘，降低学习风险。";
   return { grade, risks, action };
 }
-function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
-function setHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }

@@ -121,3 +121,5 @@ textarea { min-height:110px; resize:vertical; }
 .index-hero { display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; align-items:stretch; }
 .index-card { min-height:145px; display:flex; flex-direction:column; justify-content:space-between; }
 @media (max-width: 900px) { .index-hero { grid-template-columns:1fr; } .chat-input { grid-template-columns:1fr; } .slider-row{grid-template-columns:1fr;} }
+
+.hidden { display: none !important; }

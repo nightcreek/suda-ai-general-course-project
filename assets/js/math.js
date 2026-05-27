@@ -1,31 +1,38 @@
 let mathApiKey = '';
-let mathModel = 'gpt-4o-mini';
+let mathModel = DEFAULT_API_MODEL;
 function initSharedApiForMath() {
   const session = loadSharedApiSession();
   mathApiKey = session.key;
   mathModel = session.model;
   const modelInput = document.getElementById('math-api-model-input');
   if (modelInput) modelInput.value = mathModel;
-  setText('math-api-status', mathApiKey ? `API Key：已设置｜${mathModel}` : 'API Key：未设置');
+  setText('math-api-status', mathApiKey ? `API Key：${maskApiKeyForDisplay(mathApiKey)}｜模型：${mathModel}` : 'API Key：未设置');
+  const homeLink = document.getElementById('math-home-api-link');
+  if (homeLink) homeLink.classList.toggle('hidden', !!mathApiKey);
 }
 function clearApiKeySessionFromMath() {
   clearSharedApiSession();
   mathApiKey = '';
-  mathModel = 'gpt-4o-mini';
+  mathModel = DEFAULT_API_MODEL;
   setText('math-api-status', 'API Key：未设置');
+  const homeLink = document.getElementById('math-home-api-link');
+  if (homeLink) homeLink.classList.remove('hidden');
   setText('math-status', '当前状态：API Key 会话已清除。');
 }
 let graphingApi = null;
 let graphingInjected = false;
 function saveMathApiKey() {
-  const key = document.getElementById('math-api-key-input').value.trim();
-  const model = document.getElementById('math-api-model-input').value.trim();
+  const keyInput = document.getElementById('math-api-key-input');
+  const modelInput = document.getElementById('math-api-model-input');
+  if (!keyInput || !modelInput) { alert('请回首页设置 API Key。'); return; }
+  const key = keyInput.value.trim();
+  const model = modelInput.value.trim();
   if (!key) { alert('请先输入 API Key。'); return; }
   mathApiKey = key;
-  mathModel = model || 'gpt-4o-mini';
+  mathModel = model || DEFAULT_API_MODEL;
   saveSharedApiSession(mathApiKey, mathModel);
-  document.getElementById('math-api-key-input').value = '';
-  setText('math-api-status', `API Key：已设置｜${mathModel}`);
+  keyInput.value = '';
+  setText('math-api-status', `API Key：${maskApiKeyForDisplay(mathApiKey)}｜模型：${mathModel}`);
   closeModal('mathApiModal');
 }
 function injectGraphingIfNeeded() {
@@ -62,7 +69,7 @@ function parseCommands(reply) {
 async function executeMathQuestion() {
   const prompt = document.getElementById('math-prompt').value.trim();
   if (!prompt) { alert('请先输入数学题目。'); return; }
-  if (!mathApiKey) { setText('math-output', '请先设置 API Key。'); return; }
+  if (!mathApiKey) { setText('math-output', '请先回首页设置 API Key。'); return; }
   setText('math-status', '正在生成讲解与 GeoGebra 指令...');
   setText('math-output', '等待模型返回...');
   setHTML('math-commands', '');
