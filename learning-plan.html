@@ -141,7 +141,7 @@ function init(){
   }
 }
 function learningSystemPrompt(){
-  return '你是面向大学新生的智能学习伙伴。请基于学生画像和预测结果生成具体、可执行、不过度夸张的学习建议。要求中文回答，结构清晰，不要使用 Markdown 表格。';
+  return '你是面向大学新生的智能学习伙伴。请基于学生画像和预测结果生成具体、可执行、不过度夸张的学习建议。回答必须贴合输入数据，不要使用固定模板直接套话。要求中文回答，结构清晰，不要使用 Markdown 表格。输出应包含原因、建议和下一步行动。';
 }
 function profileBlock(){ return buildProfileText(loadProfile()); }
 async function runLearningLLM(targetId, task, statusText){
@@ -167,7 +167,7 @@ async function generateAISummary(){
   try {
     const reply = await callSharedLLM({
       system: learningSystemPrompt(),
-      user: `【学生画像与预测】\n${profileBlock()}\n\n请输出三段，每段一行，格式必须严格为：\n今日学习动作：...\n主要风险点：...\n下一步训练：...`,
+      user: `【学生画像与预测】\n${profileBlock()}\n\n请输出三段，每段一行，格式必须严格为：\n今日学习动作：...\n主要风险点：...\n下一步训练：...\n要求：每段都必须引用至少一个学生画像指标，例如学习时长、出勤率、睡眠、前次成绩、通过概率或综合成绩预测；不要泛泛而谈。`,
       temperature: 0.25
     });
     const getLine = (label) => {
@@ -185,13 +185,13 @@ async function generateAISummary(){
   }
 }
 function generateAIPlan(){
-  runLearningLLM('weekly-plan-content', '请生成一份 7 天学习计划。每一天包括：学习目标、具体任务、预计用时、复盘方式。计划要结合预测分数和风险点。', '当前状态：正在生成学习计划...');
+  runLearningLLM('weekly-plan-content', '请生成一份 7 天学习计划。每一天包括：学习目标、具体任务、预计用时、复盘方式。计划必须结合预测分数、通过概率和风险点；任务要适合大一学生，优先包含数学学习方法、错题复盘和阶段测试。', '当前状态：正在生成学习计划...');
 }
 function generateAIWeakness(){
-  runLearningLLM('weakness-content', '请分析该学生目前最可能的 3 个薄弱点，分别说明原因、证据和干预建议。', '当前状态：正在分析薄弱点...');
+  runLearningLLM('weakness-content', '请分析该学生目前最可能的 3 个薄弱点，分别说明原因、来自学生画像或预测结果的证据、干预建议和一条可检查的改进指标。', '当前状态：正在分析薄弱点...');
 }
 function generateAIPractice(){
-  runLearningLLM('practice-content', '请生成一组数学学习练习：基础题 2 道、巩固题 2 道、提高题 1 道。每题给出提示，但不要直接给完整答案。', '当前状态：正在生成相似练习...');
+  runLearningLLM('practice-content', '请生成一组数学学习练习：基础题 2 道、巩固题 2 道、提高题 1 道。练习内容面向大一数学学习，可覆盖函数、极限、导数、线性代数基础或用户薄弱方向。每题给出提示，但不要直接给完整答案；最后给出建议完成顺序。', '当前状态：正在生成相似练习...');
 }
 init();
 </script>

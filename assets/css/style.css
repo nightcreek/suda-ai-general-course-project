@@ -123,3 +123,4 @@ textarea { min-height:110px; resize:vertical; }
 @media (max-width: 900px) { .index-hero { grid-template-columns:1fr; } .chat-input { grid-template-columns:1fr; } .slider-row{grid-template-columns:1fr;} }
 
 .hidden { display: none !important; }
+input.readonly { background: #f8fafc; color: var(--muted); }

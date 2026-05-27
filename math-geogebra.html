@@ -2,7 +2,7 @@
 <body><div class="container"><header class="site-header"><h1>AI 数形结合讲题</h1><p>数学讲解 · GeoGebra 绘图联动 · 自定义模型</p></header><nav id="main-nav" class="top-nav"></nav><div class="notice">请先在首页设置 API Key；本页会自动检测当前浏览器会话中的 API Key 与模型名称。</div>
 <main><section>
 <div class="section-head"><div><h2 class="section-title">题目输入</h2><p class="section-subtitle">AI 生成讲解；必要时自动绘图。</p></div><span class="step-badge">STEP 04</span></div>
-<div class="toolbar"><span id="math-api-status" class="value-badge">API Key：未设置</span><a id="math-home-api-link" class="button" href="index.html">回首页设置 API Key</a><a class="button" href="https://www.geogebra.org/graphing" target="_blank" rel="noopener">独立图形计算器</a></div>
+<div class="toolbar"><span id="math-api-status" class="value-badge">API Key：未设置</span><span id="ggb-doc-status" class="value-badge">GeoGebra 命令参考：加载中</span><a id="math-home-api-link" class="button" href="index.html">回首页设置 API Key</a><a class="button" href="https://www.geogebra.org/graphing" target="_blank" rel="noopener">独立图形计算器</a></div>
 <div class="toolbar"><button onclick="fillExample('分析函数 f(x)=sin(x)+x^2/10 的图像，并标出与 x 轴的交点。')">函数图像示例</button><button onclick="fillExample('解释导数的几何意义，并用 f(x)=x^3-3x 画图说明。')">导数几何意义</button><button onclick="fillExample('求解 x^2-2=0，并说明解在数轴上的位置。')">方程示例</button></div>
 <textarea id="math-prompt" style="margin-top:16px;" placeholder="例如：分析函数 f(x)=sin(x)+x^2/10 的图像，并标出与 x 轴的交点。"></textarea>
 <div class="toolbar"><button class="primary" style="width:100%;" onclick="executeMathQuestion()">生成讲解与图形</button></div>

@@ -35,7 +35,7 @@
               <button class="primary" onclick="openModal('homeApiModal')">设置 API Key</button>
               <button onclick="clearHomeApiSession()">清除本次会话 Key</button>
             </div>
-            <p class="muted" style="margin-top:12px;">API Key 仅保存在当前浏览器会话中，用于跨页面临时共享；关闭标签页后会自动清空。模型名称可自定义。</p>
+            <p class="muted" style="margin-top:12px;">API Key 仅保存在当前浏览器会话中，用于跨页面临时共享；关闭标签页后会自动清空。平台、接口地址和模型名称可自定义；常用国内平台已预设，其他平台可选择自定义接口。</p>
           </div>
         </div>
       </section>
@@ -54,12 +54,19 @@
   <div id="homeApiModal" class="modal">
     <div class="modal-content">
       <div class="modal-head"><h3>设置全局 API Key</h3><span class="close" onclick="closeModal('homeApiModal')">&times;</span></div>
-      <label class="muted">API Key</label>
-      <input type="password" id="home-api-key-input" placeholder="sk-..." autocomplete="off" />
+      <label class="muted">AI 平台</label>
+      <select id="home-api-provider-select"></select>
       <div style="height:12px"></div>
-      <label class="muted">模型名称（可自定义）</label>
-      <input type="text" id="home-api-model-input" placeholder="例如：gpt-4o-mini、gpt-4.1-mini，或你的兼容模型名" />
-      <p class="muted">不同用户可以填写自己 API Key 可用的模型名称。保存后，学习计划、文件问答和数形结合页面会自动读取当前会话中的设置。</p>
+      <label class="muted">API Key</label>
+      <input type="password" id="home-api-key-input" placeholder="填入所选平台的 API Key" autocomplete="off" />
+      <div style="height:12px"></div>
+      <label class="muted">模型名称（按平台控制台填写）</label>
+      <input type="text" id="home-api-model-input" placeholder="例如：deepseek-chat、qwen-plus、moonshot-v1-8k" />
+      <div style="height:12px"></div>
+      <label class="muted">接口地址</label>
+      <input type="text" id="home-api-endpoint-input" placeholder="选择自定义时填写完整 chat/completions 地址" />
+      <p id="home-api-provider-note" class="muted"></p>
+      <p class="muted">常用国内平台已预设接口；其他兼容 OpenAI Chat Completions 的平台可选择“自定义 OpenAI-compatible”。保存后，学习计划、文件问答和数形结合页面会自动读取当前会话中的设置。</p>
       <div class="toolbar"><button onclick="closeModal('homeApiModal')">取消</button><button class="primary" onclick="saveHomeApiSession()">保存</button></div>
     </div>
   </div>
@@ -67,15 +74,15 @@
   <script>
     renderMainNav('index.html');
     refreshApiStatus('home-api-status');
-    initApiModelInput('home-api-model-input');
+    initApiSettingsUI('home-api-provider-select','home-api-key-input','home-api-model-input','home-api-endpoint-input','home-api-provider-note');
     function saveHomeApiSession() {
-      const saved = saveSharedApiFromInputs('home-api-key-input','home-api-model-input','home-api-status','homeApiModal');
+      const saved = saveSharedApiFromInputs('home-api-key-input','home-api-model-input','home-api-status','homeApiModal','home-api-provider-select','home-api-endpoint-input');
       if (saved) refreshApiStatus('home-api-status');
     }
     function clearHomeApiSession() {
       clearSharedApiSession();
       refreshApiStatus('home-api-status');
-      initApiModelInput('home-api-model-input');
+      initApiSettingsUI('home-api-provider-select','home-api-key-input','home-api-model-input','home-api-endpoint-input','home-api-provider-note');
     }
   </script>
 </body>
