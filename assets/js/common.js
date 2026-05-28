@@ -85,7 +85,11 @@ function appendMessage(containerId, text, role='assistant') {
   if (!box) return;
   const msg = document.createElement('div');
   msg.className = `message ${role}`;
-  msg.textContent = text;
+  if (role === 'assistant') {
+    renderRichTextElement(msg, text, { math: false });
+  } else {
+    msg.textContent = text;
+  }
   box.appendChild(msg);
   box.scrollTop = box.scrollHeight;
 }
@@ -104,6 +108,62 @@ function renderMainNav(active) {
 }
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 function setHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+function escapeHTML(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+function normalizeLineBreaks(value) {
+  return String(value || '').replace(/\\n/g, '\n');
+}
+function renderFallbackMarkdown(value) {
+  const safe = escapeHTML(normalizeLineBreaks(value));
+  return safe
+    .replace(/^###\s+(.+)$/gm, '<h4>$1</h4>')
+    .replace(/^##\s+(.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#\s+(.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+function renderRichTextElement(el, rawText, options = {}) {
+  if (!el) return;
+  const text = normalizeLineBreaks(rawText || '');
+  let html = '';
+  if (window.marked && typeof window.marked.parse === 'function') {
+    try {
+      html = window.marked.parse(text, { breaks: true, gfm: true });
+    } catch (err) {
+      html = renderFallbackMarkdown(text);
+    }
+  } else {
+    html = renderFallbackMarkdown(text);
+  }
+  el.innerHTML = html;
+  el.classList.add('rich-text');
+  if (options.math !== false && typeof window.renderMathInElement === 'function') {
+    try {
+      window.renderMathInElement(el, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '\\[', right: '\\]', display: true },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    } catch (err) {}
+  }
+}
+
+function renderRichText(id, rawText, options = {}) {
+  const el = document.getElementById(id);
+  renderRichTextElement(el, rawText, options);
+}
 
 function normalizeEndpoint(endpoint) {
   const value = String(endpoint || '').trim();
@@ -227,11 +287,20 @@ async function callSharedLLM({ system = '', user = '', temperature = 0.3 }) {
   const messages = [];
   if (system) messages.push({ role: 'system', content: system });
   messages.push({ role: 'user', content: user });
-  const response = await fetch(session.endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.key}` },
-    body: JSON.stringify({ model: session.model || DEFAULT_API_MODEL, messages, temperature })
-  });
+  let response;
+  try {
+    response = await fetch(session.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.key}` },
+      body: JSON.stringify({ model: session.model || DEFAULT_API_MODEL, messages, temperature })
+    });
+  } catch (err) {
+    const raw = err && err.message ? err.message : String(err);
+    if (raw.includes('Load failed') || raw.includes('Failed to fetch') || raw.includes('NetworkError')) {
+      throw new Error('浏览器请求失败。可能原因：该平台不允许 GitHub Pages 这类前端页面直接跨域调用、接口地址错误，或当前网络无法访问。建议改用 OpenRouter 或支持浏览器前端调用的 OpenAI-compatible 网关。');
+    }
+    throw err;
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error?.message || data.message || `HTTP ${response.status}`);
   return data.choices?.[0]?.message?.content || data.output_text || '模型未返回有效内容。';

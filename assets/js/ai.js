@@ -100,9 +100,9 @@ async function askLLM(question, containerId='chat-container') {
   thinking.textContent = '正在调用大语言模型...';
   const box = document.getElementById(containerId); box.appendChild(thinking); box.scrollTop = box.scrollHeight;
   try {
-    thinking.textContent = await callSharedLLM({ user: buildContextForAI(question), temperature: 0.3 });
+    renderRichTextElement(thinking, await callSharedLLM({ user: buildContextForAI(question), temperature: 0.3 }), { math: false });
   } catch (err) {
-    thinking.textContent = `调用失败：${err.message}`;
+    renderRichTextElement(thinking, `调用失败：${err.message}`, { math: false });
   }
 }
 function bindChat() {

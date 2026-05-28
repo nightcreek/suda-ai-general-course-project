@@ -151,10 +151,10 @@ ${userPrompt}
 async function executeMathQuestion() {
   const prompt = document.getElementById('math-prompt').value.trim();
   if (!prompt) { alert('请先输入数学题目。'); return; }
-  if (!mathApiKey) { setText('math-output', '请先回首页设置 API Key。'); return; }
+  if (!mathApiKey) { renderRichText('math-output', '请先回首页设置 API Key。', { math: false }); return; }
   setText('math-status', '正在生成讲解与 GeoGebra 指令...');
-  setText('math-output', '等待模型返回...');
-  setHTML('math-commands', '');
+  renderRichText('math-output', '等待模型返回...', { math: false });
+  setHTML('math-commands', '<div class="empty-hint">正在等待模型生成 GeoGebra 指令。</div>');
   try {
     if (!geogebraCommandDocs) await loadGeoGebraCommandDocs();
     const content = await callSharedLLM({
@@ -163,7 +163,7 @@ async function executeMathQuestion() {
       temperature: 0.15
     });
     const parsed = parseCommands(content);
-    setText('math-output', parsed.text || '模型没有返回讲解文本。');
+    renderRichText('math-output', parsed.text || '模型没有返回讲解文本。', { math: true });
     if (parsed.commands.length) {
       injectGraphingIfNeeded();
       setHTML('math-commands', parsed.commands.map(c => `<span class="command-badge">${c}</span>`).join(''));
@@ -174,10 +174,11 @@ async function executeMathQuestion() {
         });
       }, 800);
     } else {
+      setHTML('math-commands', '<div class="empty-hint">本题无需 GeoGebra 图形辅助，因此未生成绘图命令。</div>');
       setText('math-status', '已生成讲解；本题未触发绘图。');
     }
   } catch (err) {
-    setText('math-output', `调用失败：${err.message}`);
+    renderRichText('math-output', `调用失败：${err.message}`, { math: false });
     setText('math-status', '调用失败');
   }
 }
