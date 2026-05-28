@@ -130,104 +130,113 @@ function renderFallbackMarkdown(value) {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br>');
 }
-function renderLatexTextNode(textNode) {
-  if (!window.katex || !textNode || !textNode.nodeValue) return;
-  const source = textNode.nodeValue;
-  const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+?\$)/g;
-  if (!regex.test(source)) return;
-  regex.lastIndex = 0;
-  const fragment = document.createDocumentFragment();
-  let lastIndex = 0;
-  let match;
-  while ((match = regex.exec(source)) !== null) {
-    if (match.index > lastIndex) {
-      fragment.appendChild(document.createTextNode(source.slice(lastIndex, match.index)));
+function normalizeLatexSource(tex) {
+  return String(tex || '')
+    .replace(/\\\\/g, '\\')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function replaceLatexCommandsForFallback(tex) {
+  let t = normalizeLatexSource(tex);
+  const simpleCommands = {
+    '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\cot': 'cot', '\\sec': 'sec', '\\csc': 'csc',
+    '\\ln': 'ln', '\\log': 'log', '\\exp': 'exp', '\\sqrt': '√', '\\pi': 'π', '\\theta': 'θ',
+    '\\alpha': 'α', '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\epsilon': 'ε',
+    '\\lambda': 'λ', '\\mu': 'μ', '\\sigma': 'σ', '\\omega': 'ω', '\\infty': '∞',
+    '\\leq': '≤', '\\geq': '≥', '\\neq': '≠', '\\cdot': '·', '\\times': '×',
+    '\\to': '→', '\\in': '∈', '\\notin': '∉', '\\subset': '⊂', '\\subseteq': '⊆',
+    '\\cup': '∪', '\\cap': '∩', '\\int': '∫', '\\sum': '∑', '\\forall': '∀', '\\exists': '∃'
+  };
+  // Fractions: repeat to handle nested/simple occurrences.
+  for (let i = 0; i < 4; i++) {
+    t = t.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '<span class="math-frac"><span>$1</span><span>$2</span></span>');
+  }
+  t = t.replace(/\\mathbb\{R\}/g, 'ℝ')
+       .replace(/\\mathbb\{Z\}/g, 'ℤ')
+       .replace(/\\mathbb\{Q\}/g, 'ℚ')
+       .replace(/\\mathbb\{N\}/g, 'ℕ')
+       .replace(/\\mathbb\{C\}/g, 'ℂ')
+       .replace(/\\text\{([^{}]+)\}/g, '$1')
+       .replace(/\\left|\\right/g, '');
+  Object.entries(simpleCommands).forEach(([k, v]) => { t = t.split(k).join(v); });
+  // Convert common superscript/subscript braces into readable HTML.
+  t = t.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>')
+       .replace(/_\{([^{}]+)\}/g, '<sub>$1</sub>')
+       .replace(/\^([A-Za-z0-9+-])/g, '<sup>$1</sup>')
+       .replace(/_([A-Za-z0-9+-])/g, '<sub>$1</sub>')
+       .replace(/\\,/g, ' ')
+       .replace(/\\;/g, ' ')
+       .replace(/\\!/g, '')
+       .replace(/\\ /g, ' ')
+       .replace(/\\/g, '');
+  return t;
+}
+
+function renderLatexToHTML(tex, displayMode = false) {
+  const source = normalizeLatexSource(tex);
+  if (window.katex && typeof window.katex.renderToString === 'function') {
+    try {
+      return window.katex.renderToString(source, { displayMode, throwOnError: false, strict: false });
+    } catch (err) {
+      // Fall through to local fallback below.
     }
-    const token = match[0];
+  }
+  const fallback = replaceLatexCommandsForFallback(escapeHTML(source));
+  return `<span class="latex-fallback ${displayMode ? 'display' : 'inline'}">${fallback}</span>`;
+}
+
+function extractMathPlaceholders(rawText) {
+  const source = normalizeLineBreaks(rawText || '');
+  const tokens = [];
+  const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+?\$)/g;
+  const text = source.replace(regex, (token) => {
     let tex = token;
     let displayMode = false;
     if (token.startsWith('$$') && token.endsWith('$$')) {
-      tex = token.slice(2, -2);
-      displayMode = true;
+      tex = token.slice(2, -2); displayMode = true;
     } else if (token.startsWith('\\[') && token.endsWith('\\]')) {
-      tex = token.slice(2, -2);
-      displayMode = true;
+      tex = token.slice(2, -2); displayMode = true;
     } else if (token.startsWith('\\(') && token.endsWith('\\)')) {
-      tex = token.slice(2, -2);
-      displayMode = false;
+      tex = token.slice(2, -2); displayMode = false;
     } else if (token.startsWith('$') && token.endsWith('$')) {
-      tex = token.slice(1, -1);
-      displayMode = false;
+      tex = token.slice(1, -1); displayMode = false;
     }
-    const span = document.createElement(displayMode ? 'div' : 'span');
-    try {
-      span.innerHTML = window.katex.renderToString(tex.trim(), {
-        displayMode,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (err) {
-      span.textContent = token;
-    }
-    fragment.appendChild(span);
-    lastIndex = regex.lastIndex;
-  }
-  if (lastIndex < source.length) {
-    fragment.appendChild(document.createTextNode(source.slice(lastIndex)));
-  }
-  textNode.parentNode.replaceChild(fragment, textNode);
+    const key = `@@MATH_${tokens.length}@@`;
+    tokens.push({ key, tex, displayMode });
+    return key;
+  });
+  return { text, tokens };
 }
 
-function renderMathInRichText(el) {
-  if (!el || !window.katex) return;
-  const skipTags = new Set(['CODE', 'PRE', 'SCRIPT', 'STYLE', 'TEXTAREA']);
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      let parent = node.parentElement;
-      while (parent && parent !== el) {
-        if (skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
-        parent = parent.parentElement;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    }
+function restoreMathPlaceholders(html, tokens) {
+  let output = html;
+  tokens.forEach(({ key, tex, displayMode }) => {
+    const rendered = renderLatexToHTML(tex, displayMode);
+    output = output.split(key).join(rendered);
   });
-  const nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(renderLatexTextNode);
+  return output;
 }
 
 function renderRichTextElement(el, rawText, options = {}) {
   if (!el) return;
-  const text = normalizeLineBreaks(rawText || '');
+  const withMath = options.math !== false;
+  const extracted = withMath ? extractMathPlaceholders(rawText || '') : { text: normalizeLineBreaks(rawText || ''), tokens: [] };
   let html = '';
   if (window.marked && typeof window.marked.parse === 'function') {
     try {
-      html = window.marked.parse(text, { breaks: true, gfm: true });
+      html = window.marked.parse(extracted.text, { breaks: true, gfm: true });
     } catch (err) {
-      html = renderFallbackMarkdown(text);
+      html = renderFallbackMarkdown(extracted.text);
     }
   } else {
-    html = renderFallbackMarkdown(text);
+    html = renderFallbackMarkdown(extracted.text);
+  }
+  if (withMath && extracted.tokens.length) {
+    html = restoreMathPlaceholders(html, extracted.tokens);
   }
   el.innerHTML = html;
   el.classList.add('rich-text');
-  if (options.math !== false) {
-    if (window.katex) {
-      renderMathInRichText(el);
-    } else if (typeof window.renderMathInElement === 'function') {
-      try {
-        window.renderMathInElement(el, {
-          delimiters: [
-            { left: '$$', right: '$$', display: true },
-            { left: '\\[', right: '\\]', display: true },
-            { left: '\\(', right: '\\)', display: false },
-            { left: '$', right: '$', display: false }
-          ],
-          throwOnError: false
-        });
-      } catch (err) {}
-    }
-  }
 }
 
 function renderRichText(id, rawText, options = {}) {
