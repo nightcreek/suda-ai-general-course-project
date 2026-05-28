@@ -130,6 +130,72 @@ function renderFallbackMarkdown(value) {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br>');
 }
+function renderLatexTextNode(textNode) {
+  if (!window.katex || !textNode || !textNode.nodeValue) return;
+  const source = textNode.nodeValue;
+  const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+?\$)/g;
+  if (!regex.test(source)) return;
+  regex.lastIndex = 0;
+  const fragment = document.createDocumentFragment();
+  let lastIndex = 0;
+  let match;
+  while ((match = regex.exec(source)) !== null) {
+    if (match.index > lastIndex) {
+      fragment.appendChild(document.createTextNode(source.slice(lastIndex, match.index)));
+    }
+    const token = match[0];
+    let tex = token;
+    let displayMode = false;
+    if (token.startsWith('$$') && token.endsWith('$$')) {
+      tex = token.slice(2, -2);
+      displayMode = true;
+    } else if (token.startsWith('\\[') && token.endsWith('\\]')) {
+      tex = token.slice(2, -2);
+      displayMode = true;
+    } else if (token.startsWith('\\(') && token.endsWith('\\)')) {
+      tex = token.slice(2, -2);
+      displayMode = false;
+    } else if (token.startsWith('$') && token.endsWith('$')) {
+      tex = token.slice(1, -1);
+      displayMode = false;
+    }
+    const span = document.createElement(displayMode ? 'div' : 'span');
+    try {
+      span.innerHTML = window.katex.renderToString(tex.trim(), {
+        displayMode,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (err) {
+      span.textContent = token;
+    }
+    fragment.appendChild(span);
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < source.length) {
+    fragment.appendChild(document.createTextNode(source.slice(lastIndex)));
+  }
+  textNode.parentNode.replaceChild(fragment, textNode);
+}
+
+function renderMathInRichText(el) {
+  if (!el || !window.katex) return;
+  const skipTags = new Set(['CODE', 'PRE', 'SCRIPT', 'STYLE', 'TEXTAREA']);
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      let parent = node.parentElement;
+      while (parent && parent !== el) {
+        if (skipTags.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        parent = parent.parentElement;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(renderLatexTextNode);
+}
+
 function renderRichTextElement(el, rawText, options = {}) {
   if (!el) return;
   const text = normalizeLineBreaks(rawText || '');
@@ -145,18 +211,22 @@ function renderRichTextElement(el, rawText, options = {}) {
   }
   el.innerHTML = html;
   el.classList.add('rich-text');
-  if (options.math !== false && typeof window.renderMathInElement === 'function') {
-    try {
-      window.renderMathInElement(el, {
-        delimiters: [
-          { left: '$$', right: '$$', display: true },
-          { left: '\\[', right: '\\]', display: true },
-          { left: '\\(', right: '\\)', display: false },
-          { left: '$', right: '$', display: false }
-        ],
-        throwOnError: false
-      });
-    } catch (err) {}
+  if (options.math !== false) {
+    if (window.katex) {
+      renderMathInRichText(el);
+    } else if (typeof window.renderMathInElement === 'function') {
+      try {
+        window.renderMathInElement(el, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '$', right: '$', display: false }
+          ],
+          throwOnError: false
+        });
+      } catch (err) {}
+    }
   }
 }
 

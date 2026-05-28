@@ -5,6 +5,8 @@ let mathEndpoint = DEFAULT_API_ENDPOINT;
 
 let graphingApi = null;
 let graphingInjected = false;
+let pendingGGBCommands = [];
+let pendingGGBRetryCount = 0;
 let geogebraCommandDocs = '';
 
 const FALLBACK_GEOGEBRA_COMMAND_DOCS = `
@@ -82,10 +84,63 @@ function injectGraphingIfNeeded() {
         api.setPerspective('G');
         api.setCoordSystem(-10, 10, -6, 6);
       } catch(e) {}
+      tryExecutePendingGGBCommands();
     }
   }, true);
   applet.inject('ggb-pane');
   graphingInjected = true;
+}
+
+function tryExecutePendingGGBCommands() {
+  if (!pendingGGBCommands.length) return;
+  if (!graphingApi || typeof graphingApi.evalCommand !== 'function') {
+    if (pendingGGBRetryCount < 30) {
+      pendingGGBRetryCount += 1;
+      setTimeout(tryExecutePendingGGBCommands, 250);
+    } else {
+      setText('math-status', 'GeoGebra 图形区已展开，但画布仍未就绪，命令暂未执行。');
+    }
+    return;
+  }
+
+  const commands = pendingGGBCommands.slice();
+  pendingGGBCommands = [];
+  pendingGGBRetryCount = 0;
+  const failed = [];
+  commands.forEach(cmd => {
+    try {
+      const label = graphingApi.evalCommand(cmd);
+      if (label && graphingApi.setVisible) graphingApi.setVisible(label, true);
+    } catch (err) {
+      failed.push(`${cmd} (${err && err.message ? err.message : '执行失败'})`);
+    }
+  });
+  if (failed.length) {
+    setText('math-status', `部分 GeoGebra 命令执行失败：${failed.join('；')}`);
+  } else {
+    setText('math-status', '已生成讲解，并将 GeoGebra 命令插入图形区。');
+  }
+}
+
+function queueGeoGebraCommands(commands) {
+  pendingGGBCommands = Array.isArray(commands) ? commands.filter(Boolean) : [];
+  pendingGGBRetryCount = 0;
+  injectGraphingIfNeeded();
+  tryExecutePendingGGBCommands();
+}
+
+function normalizeGGBCommand(command) {
+  return String(command || '')
+    .trim()
+    .replace(/^`+|`+$/g, '')
+    .replace(/^\$+|\$+$/g, '')
+    .replace(/^\\\(|\\\)$/g, '')
+    .replace(/^\\\[|\\\]$/g, '')
+    .replace(/\\left|\\right/g, '')
+    .replace(/\\(sin|cos|tan|cot|sec|csc|ln|log|sqrt|exp|pi)/g, '$1')
+    .replace(/\\cdot/g, '*')
+    .replace(/[，；]/g, ';')
+    .trim();
 }
 
 function parseCommands(reply) {
@@ -97,8 +152,8 @@ function parseCommands(reply) {
   return {
     text,
     commands: raw
-      .split(';')
-      .map(s => s.trim())
+      .split(/[;\n]+/)
+      .map(normalizeGGBCommand)
       .filter(Boolean)
       .filter(c => !/[\u4e00-\u9fa5]/.test(c))
       .filter(c => !c.startsWith('-') && !c.startsWith('*') && !/^\d+[\.、]/.test(c))
@@ -165,14 +220,9 @@ async function executeMathQuestion() {
     const parsed = parseCommands(content);
     renderRichText('math-output', parsed.text || '模型没有返回讲解文本。', { math: true });
     if (parsed.commands.length) {
-      injectGraphingIfNeeded();
-      setHTML('math-commands', parsed.commands.map(c => `<span class="command-badge">${c}</span>`).join(''));
-      setText('math-status', '已生成讲解，并尝试绘制图形。');
-      setTimeout(() => {
-        parsed.commands.forEach(cmd => {
-          try { graphingApi && graphingApi.evalCommand(cmd); } catch(e) {}
-        });
-      }, 800);
+      setHTML('math-commands', parsed.commands.map(c => `<span class="command-badge">${escapeHTML(c)}</span>`).join(''));
+      setText('math-status', '已生成讲解，正在等待 GeoGebra 画布就绪并插入命令...');
+      queueGeoGebraCommands(parsed.commands);
     } else {
       setHTML('math-commands', '<div class="empty-hint">本题无需 GeoGebra 图形辅助，因此未生成绘图命令。</div>');
       setText('math-status', '已生成讲解；本题未触发绘图。');
