@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>学习计划与复盘｜智能学习伙伴原型</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
@@ -153,10 +154,10 @@ async function runLearningLLM(targetId, task, statusText){
       user: `【学生画像与预测】\n${profileBlock()}\n\n【任务】\n${task}`,
       temperature: 0.35
     });
-    setText(targetId, reply);
+    renderRichText(targetId, reply, { math: false });
     setText('plan-status', '当前状态：AI 分析完成。');
   } catch (err) {
-    setText(targetId, `生成失败：${err.message}`);
+    renderRichText(targetId, `生成失败：${err.message}`, { math: false });
     setText('plan-status', '当前状态：需要检查 API Key、模型名称或网络。');
   }
 }

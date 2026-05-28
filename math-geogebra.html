@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AI 数形结合讲题｜智能学习伙伴原型</title><script src="https://cdn.geogebra.org/apps/deployggb.js"></script><link rel="stylesheet" href="assets/css/style.css"/></head>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>AI 数形结合讲题｜智能学习伙伴原型</title>
+<script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="assets/css/style.css"/></head>
 <body><div class="container"><header class="site-header"><h1>AI 数形结合讲题</h1><p>数学讲解 · GeoGebra 绘图联动 · 自定义模型</p></header><nav id="main-nav" class="top-nav"></nav><div class="notice">请先在首页设置 API Key；本页会自动检测当前浏览器会话中的 API Key 与模型名称。</div>
 <main><section>
 <div class="section-head"><div><h2 class="section-title">题目输入</h2><p class="section-subtitle">AI 生成讲解；必要时自动绘图。</p></div><span class="step-badge">STEP 04</span></div>
@@ -8,6 +14,6 @@
 <div class="toolbar"><button class="primary" style="width:100%;" onclick="executeMathQuestion()">生成讲解与图形</button></div>
 <p id="math-status" class="muted">当前状态：等待输入。</p>
 </section>
-<section><div class="section-head"><div><h2 class="section-title">讲题结果</h2><p class="section-subtitle">讲解、命令与图像分区显示。</p></div></div><div class="grid-2"><div class="card"><h3>数学讲解</h3><div id="math-output" class="result-box">尚未生成讲解。</div></div><div class="card"><h3>GeoGebra 指令</h3><div id="math-commands" class="command-badges"></div><p class="muted">若模型返回绘图命令，下方图形区会自动展开。</p></div></div><div id="ggb-pane" class="ggb-pane"></div></section>
+<section><div class="section-head"><div><h2 class="section-title">讲题结果</h2><p class="section-subtitle">讲解、命令与图像分区显示。</p></div></div><div class="grid-2"><div class="card"><h3>数学讲解</h3><div id="math-output" class="result-box">尚未生成讲解。</div></div><div class="card"><h3>GeoGebra 指令</h3><div id="math-commands" class="command-badges"><div class="empty-hint">尚未生成 GeoGebra 指令。</div></div><p class="muted">若模型返回绘图命令，下方图形区会自动展开。</p></div></div><div id="ggb-pane" class="ggb-pane"></div></section>
 </main><footer class="footer">AI 数形结合讲题页面</footer></div>
 <script src="assets/js/common.js"></script><script src="assets/js/math.js"></script><script>renderMainNav('math-geogebra.html'); initSharedApiForMath();</script></body></html>
