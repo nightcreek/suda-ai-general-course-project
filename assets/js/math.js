@@ -170,8 +170,8 @@ function buildGeoGebraSystemPrompt() {
 3. 不要使用 Markdown 表格。
 4. 不要编造不存在的定理名称。
 5. 如果题目条件不足，明确指出不足，并给出可补充的条件。
-6. 所有数学公式必须使用标准 LaTeX 分隔符：行内公式用 \( ... \)，独立公式用 \[ ... \]。
-7. 不要使用单独的 [ ... ] 表示公式；不要输出未包裹分隔符的 \frac、\sin、\mathbb 等 LaTeX 片段。
+6. 所有数学公式必须使用标准 LaTeX 分隔符：行内公式用 \\( ... \\)，独立公式用 \\[ ... \\]。
+7. 不要使用单独的 [ ... ] 表示公式；不要输出未包裹分隔符的 \\frac、\\sin、\\mathbb 等 LaTeX 片段。
 
 【GeoGebra 命令输出要求】
 1. 如果题目适合图形辅助，必须生成 GeoGebra 图形计算器命令。
@@ -199,7 +199,7 @@ function buildGeoGebraUserPrompt(userPrompt) {
 ${userPrompt}
 
 请完成：
-1. 给出中文数学讲解，数学公式必须用 \( ... \) 或 \[ ... \] 包裹。
+1. 给出中文数学讲解，数学公式必须用 \\( ... \\) 或 \\[ ... \\] 包裹；不要输出裸露的 \\sin、\\frac、\\mathbb 等片段。
 2. 判断是否需要图形辅助。
 3. 如果需要图形辅助，生成可由 GeoGebra 图形计算器 evalCommand 执行的命令。
 4. 命令必须严格放在 [GGB_COMMANDS_START] 与 [GGB_COMMANDS_END] 之间。`;

@@ -189,20 +189,26 @@ function renderLatexToHTML(tex, displayMode = false) {
 function extractMathPlaceholders(rawText) {
   const source = normalizeLineBreaks(rawText || '');
   const tokens = [];
-  const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+?\$)/g;
+  // Accept \(...\), \[...\], \(...\), \[...\], $...$, and $$...$$.
+  // Some models return doubled backslashes, so delimiter regex allows one or more backslashes.
+  const regex = /(\$\$[\s\S]+?\$\$|\\+[\[][\s\S]+?\\+[\]]|\\+\([\s\S]+?\\+\)|\$[^$\n]+?\$)/g;
   const text = source.replace(regex, (token) => {
     let tex = token;
     let displayMode = false;
     if (token.startsWith('$$') && token.endsWith('$$')) {
-      tex = token.slice(2, -2); displayMode = true;
-    } else if (token.startsWith('\\[') && token.endsWith('\\]')) {
-      tex = token.slice(2, -2); displayMode = true;
-    } else if (token.startsWith('\\(') && token.endsWith('\\)')) {
-      tex = token.slice(2, -2); displayMode = false;
+      tex = token.slice(2, -2);
+      displayMode = true;
+    } else if (/^\\+\[/.test(token) && /\\+\]$/.test(token)) {
+      tex = token.replace(/^\\+\[/, '').replace(/\\+\]$/, '');
+      displayMode = true;
+    } else if (/^\\+\(/.test(token) && /\\+\)$/.test(token)) {
+      tex = token.replace(/^\\+\(/, '').replace(/\\+\)$/, '');
+      displayMode = false;
     } else if (token.startsWith('$') && token.endsWith('$')) {
-      tex = token.slice(1, -1); displayMode = false;
+      tex = token.slice(1, -1);
+      displayMode = false;
     }
-    const key = `@@MATH_${tokens.length}@@`;
+    const key = `§§MATH${tokens.length}§§`;
     tokens.push({ key, tex, displayMode });
     return key;
   });
@@ -215,6 +221,17 @@ function restoreMathPlaceholders(html, tokens) {
     const rendered = renderLatexToHTML(tex, displayMode);
     output = output.split(key).join(rendered);
   });
+  return output;
+}
+
+function renderLatexDelimitersInsideHTML(html) {
+  // Defensive second pass. If Markdown conversion preserved delimiters that were not
+  // captured in the placeholder pass, render them here as well.
+  let output = String(html || '');
+  output = output.replace(/\\+\[([\s\S]+?)\\+\]/g, (_, tex) => renderLatexToHTML(tex, true));
+  output = output.replace(/\\+\(([\s\S]+?)\\+\)/g, (_, tex) => renderLatexToHTML(tex, false));
+  output = output.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => renderLatexToHTML(tex, true));
+  output = output.replace(/(^|[^\\])\$([^$\n]+?)\$/g, (m, prefix, tex) => `${prefix}${renderLatexToHTML(tex, false)}`);
   return output;
 }
 
@@ -232,8 +249,9 @@ function renderRichTextElement(el, rawText, options = {}) {
   } else {
     html = renderFallbackMarkdown(extracted.text);
   }
-  if (withMath && extracted.tokens.length) {
+  if (withMath) {
     html = restoreMathPlaceholders(html, extracted.tokens);
+    html = renderLatexDelimitersInsideHTML(html);
   }
   el.innerHTML = html;
   el.classList.add('rich-text');

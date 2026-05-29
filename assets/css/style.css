@@ -144,3 +144,21 @@ input.readonly { background: #f8fafc; color: var(--muted); }
 .math-frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 3px 1px; }
 .math-frac > span:last-child { padding: 1px 3px 0; }
 .rich-text .katex { font-size: 1.02em; }
+
+/* Math page v4: keep GeoGebra graph directly under command panel on the right. */
+.math-result-grid { align-items: start; }
+.math-result-grid .ggb-pane {
+  margin-top: 14px;
+  min-height: 420px;
+}
+@media (max-width: 900px) {
+  .math-result-grid .ggb-pane { min-height: 360px; }
+}
+/* Make rendered math output less cramped on iPad/Safari. */
+.rich-text .latex-fallback.inline,
+.rich-text .katex {
+  vertical-align: baseline;
+}
+.rich-text .latex-fallback.display {
+  overflow-x: auto;
+}
